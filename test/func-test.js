@@ -94,32 +94,33 @@ test('Should be create api object properly', function (t) {
 test('Should be work properly CRUD', function (t) {
 	var obj = { 'success': true }
 	var slug = '/proof'
-	var nockSlug = util.format('/api%s', slug)
+	var fullSlug = util.format('/api%s', slug)
 
 	var nock = Nock(endpoint)
 
 	nock
-		.get(nockSlug)
+		.get(fullSlug)
 		.reply(200, obj)
 
 	nock
-		.post(nockSlug)
+		.post(fullSlug)
 		.reply(201)
 
 	nock
-		.put(nockSlug)
+		.put(fullSlug)
 		.reply(200, obj)
 
 	nock
-		.patch(nockSlug)
+		.patch(fullSlug)
 		.reply(204)
 
 	nock
-		.delete(nockSlug)
+		.delete(fullSlug)
 		.reply(204)
 
 	var api = ndrf.api(protocol, domain)
 	var req = api.request
+	var baseReq = api.apiManager.request
 
 	function getReq (cb) { 
 		req
@@ -161,16 +162,94 @@ test('Should be work properly CRUD', function (t) {
 			})
 	}
 
+	function getReqBase (cb) { 
+		baseReq
+			.get(fullSlug, (err, res, body) => { 
+				successApiResponseAsserts(t, 200, 'GET')(err, res, body)
+				cb()
+			})
+	}
+
+	function postReqBase (cb) { 
+		baseReq
+			.post(fullSlug, { create: 'this thing' }, (err, res, body) => { 
+				successApiResponseAsserts(t, 201, 'POST', false)(err, res, body)
+				cb()
+			})
+	}
+
+	function putReqBase (cb) { 
+		baseReq
+			.put(fullSlug, { put: 'this thing' }, (err, res, body) => { 
+				successApiResponseAsserts(t, 200, 'PUT')(err, res, body)
+				cb()
+			})
+	}
+
+	function patchReqBase (cb) { 
+		baseReq
+			.patch(fullSlug, { patch: 'this thing' }, (err, res, body) => { 
+				successApiResponseAsserts(t, 204, 'PATCH', false)(err, res, body)
+				cb()
+			})
+	}
+
+	function deleteReqBase (cb) { 
+		baseReq
+			.delete(fullSlug, { delete: 'this thing' }, (err, res, body) => { 
+				successApiResponseAsserts(t, 204, 'DELETE', false)(err, res, body)
+				cb()
+			})
+	}
+
 	async.series([
 		getReq,
 		postReq,
+		putReq,
 		patchReq,
 		deleteReq
 	], (err) => {
 		t.error(err, 'Should not be an final error.')
 
-		t.end()
+		baseCrud()
 	})
+
+	function baseCrud () {
+		var nock = Nock(endpoint)
+
+		nock
+			.get(fullSlug)
+			.reply(200, obj)
+
+		nock
+			.post(fullSlug)
+			.reply(201)
+
+		nock
+			.put(fullSlug)
+			.reply(200, obj)
+
+		nock
+			.patch(fullSlug)
+			.reply(204)
+
+		nock
+			.delete(fullSlug)
+			.reply(204)
+
+
+		async.series([
+			getReqBase,
+			postReqBase,
+			putReqBase,
+			patchReqBase,
+			deleteReqBase
+		], (err) => {
+			t.error(err, 'Should not be an final error.')
+
+			t.end()
+		})
+	}
 })
 
 test('Should be get authentication token', function (t) {
@@ -199,9 +278,9 @@ test('Should be create middleware', function (t) {
 	var req = {}
 	var res = {}
 	var next = () => {
-		t.ok(req.djrfApi, 'Should be djrfApi')
-		t.ok(req.djrfApi, 'req.djrfApi should be')
-		t.equals(req.djrfApi.constructor, {}.constructor, 'req.djrfApi should a json object')
+		t.ok(req.djrfApi, 'Should be djrfApi.')
+		t.ok(req.djrfApi, 'req.djrfApi should be.')
+		t.equals(req.djrfApi.constructor, {}.constructor, 'req.djrfApi should a json object.')
 
 		req.djrfApi.auth.user({ username: '41231a', password: 'testing5power' }, authUserAsserts(t, tokenObj))
 	}
@@ -211,4 +290,34 @@ test('Should be create middleware', function (t) {
 	}
 
 	var apiMiddleware = ndrf.apiMiddleware(req, res, next, options)
+})
+
+test('Should be fail POST request', function (t) {
+	var tokenObj = { 'token': 'sdfsdafas232sddasfs' }
+
+	var api = ndrf.api(protocol, domain)
+
+	api.auth.user({ username: 'foo', password: 'foo1242A' }, (err) => {
+		t.ok(err, 'Should be an error.')
+
+		t.end()
+	})
+})
+
+test('Should throw exception', function (t) { 
+	var api = ndrf.api(protocol, domain)
+
+	try {
+		api = ndrf.api(undefined, domain)
+	} catch (e) {
+		t.ok(e, 'Should be an error when protocol is undefined')
+	}
+
+	try {
+		api = ndrf.api(protocol, undefined)
+	} catch (e) {
+		t.ok(e, 'Should be an error when domain is undefined')
+	}
+
+	t.end()
 })

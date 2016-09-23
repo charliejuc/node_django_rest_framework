@@ -19,8 +19,6 @@ function apiManager (protocol, domain, options) {
 	}
 
 	self.jsonResponse = function (err, res, body, callback) {
-		if (err) return callback(err)
-
 		var bodyParsed = self.jsonParse(body)
 
 		callback(undefined, res, bodyParsed)
@@ -37,13 +35,13 @@ function apiManager (protocol, domain, options) {
 		post: function (slug, data, callback, json) {
 			self.request.base('post', slug, callback, data, json)
 		},
-		put: function (apiSlug, data, callback, json) {
+		put: function (slug, data, callback, json) {
 			self.request.base('put', slug, callback, data, json)
 		},
-		patch: function (apiSlug, data, callback, json) {
+		patch: function (slug, data, callback, json) {
 			self.request.base('patch', slug, callback, data, json)
 		},
-		delete: function (apiSlug, data, callback, json) {
+		delete: function (slug, data, callback, json) {
 			self.request.base('delete', slug, callback, data, json)
 		},
 		base: function (method, slug, callback, data, json) {
@@ -51,7 +49,7 @@ function apiManager (protocol, domain, options) {
 			var url = self.getFullUrl(slug)
 
 			request[method]({ url: url, form: data }, function (err, res, body) {
-			  if (! json || ! body) return callback(err, res, body)
+			  if (err || ! json || ! body) return callback(err, res, body)
 
 			  self.jsonResponse(err, res, body, callback)
 			})
