@@ -1,19 +1,22 @@
+var async = require('async')
 var util = require('util')
 var test = require('tape')
 var Nock = require('nock')
 var protocol = 'http'
 var domain = 'customvote.test'
 var endpoint = util.format('%s://%s', protocol, domain)
-var nock = Nock(endpoint)
 
 var ndrf = require('../')
 
 var successApiResponseAsserts = (t, statusCode, method, checkBody) => (err, res, body) => {
 	console.log(util.format("--- %s REQUEST ---", method))
+
+	if ( checkBody != true && checkBody != false ) checkBody = true
+
 	t.error(err, 'Should not be an error.')
-	t.equals(res.statusCode, statusCode, util.format('Status code should be equals to %s.', statusCode))
+	t.equals(res && res.statusCode || 404, statusCode, util.format('Status code should be equals to %s.', statusCode))
 	
-	if (checkBody || true) t.ok(body, 'Should be body')
+	if (checkBody) t.ok(body, 'Should be body')
 }
 
 var failApiResponseAsserts = (t, statusCode, method) => (err, res, body) => {
@@ -25,8 +28,9 @@ var failApiResponseAsserts = (t, statusCode, method) => (err, res, body) => {
 var authUserAsserts = (t, tokenObj, end) => (err, res, obj) => {
 	end = end || true
 
-	successApiResponseAsserts(t, 200, 'POST')
+	successApiResponseAsserts(t, 200, 'POST')(err, res, obj)
 
+	t.ok(obj, 'Should be.')
 	t.ok(obj['token'], 'Should have a token.')
 	t.equals(tokenObj['token'], obj['token'], 'Got token should be equal to sent token.')
 
@@ -92,6 +96,8 @@ test('Should be work properly CRUD', function (t) {
 	var slug = '/proof'
 	var nockSlug = util.format('/api%s', slug)
 
+	var nock = Nock(endpoint)
+
 	nock
 		.get(nockSlug)
 		.reply(200, obj)
@@ -115,23 +121,64 @@ test('Should be work properly CRUD', function (t) {
 	var api = ndrf.api(protocol, domain)
 	var req = api.request
 
-	req
-		.get(slug, successApiResponseAsserts(t, 200, 'GET'))
-	req
-		.post(slug, { create: 'this thing' }, successApiResponseAsserts(t, 201, 'POST', false))
-	req
-		.put(slug, { put: 'this thing' }, successApiResponseAsserts(t, 200, 'PUT'))
-	req
-		.patch(slug, { patch: 'this thing' }, successApiResponseAsserts(t, 204, 'PATCH', false))
-	req
-		.delete(slug, { delete: 'this thing' }, successApiResponseAsserts(t, 204, 'DELETE', false))
+	function getReq (cb) { 
+		req
+			.get(slug, (err, res, body) => { 
+				successApiResponseAsserts(t, 200, 'GET')(err, res, body)
+				cb()
+			})
+	}
+
+	function postReq (cb) { 
+		req
+			.post(slug, { create: 'this thing' }, (err, res, body) => { 
+				successApiResponseAsserts(t, 201, 'POST', false)(err, res, body)
+				cb()
+			})
+	}
+
+	function putReq (cb) { 
+		req
+			.put(slug, { put: 'this thing' }, (err, res, body) => { 
+				successApiResponseAsserts(t, 200, 'PUT')(err, res, body)
+				cb()
+			})
+	}
+
+	function patchReq (cb) { 
+		req
+			.patch(slug, { patch: 'this thing' }, (err, res, body) => { 
+				successApiResponseAsserts(t, 204, 'PATCH', false)(err, res, body)
+				cb()
+			})
+	}
+
+	function deleteReq (cb) { 
+		req
+			.delete(slug, { delete: 'this thing' }, (err, res, body) => { 
+				successApiResponseAsserts(t, 204, 'DELETE', false)(err, res, body)
+				cb()
+			})
+	}
+
+	async.series([
+		getReq,
+		postReq,
+		patchReq,
+		deleteReq
+	], (err) => {
+		t.error(err, 'Should not be an final error.')
+
+		t.end()
+	})
 })
 
 test('Should be get authentication token', function (t) {
 	var tokenObj = { 'token': 'sdfsdafas232sddasfs' }
+	var nock = Nock(endpoint)
 
 	nock
-		.post('/api-token-auth/')
+		.post('/api-token-auth')
 		.reply(200, tokenObj)
 
 	var api = ndrf.api(protocol, domain)
@@ -141,9 +188,10 @@ test('Should be get authentication token', function (t) {
 
 test('Should be create middleware', function (t) {
 	var tokenObj = { 'token': 'sdfsdafas232sddasfs' }
+	var nock = Nock(endpoint)
 
 	nock
-		.post('/api-token-auth/')
+		.post('/api-token-auth')
 		.reply(200, tokenObj)
 
 	var api = ndrf.api(protocol, domain)
