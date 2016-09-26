@@ -9,7 +9,7 @@ var protocol = 'http'
 var domain = 'ndrf.test'
 
 var api = ndrf.api(protocol, domain, {
-	'tokenSlug': '/api-token-auth', //Default '/api-token-auth'
+	'tokenSlug': '/api-token-auth/', //Default '/api-token-auth/'
 	'apiSlug': '/api', //Default '/api'
 	'PORT': 80 //Default 80
 })
@@ -48,7 +48,7 @@ request
 
 ###DJANGO REST FRAMEWORK SPECIFIC FEATURES
 ####Token User Authentication
-Send request to '/api-token-auth' slug by default, you can change 'tokenSlug' option to any custom slug.
+Send request to '/api-token-auth/' slug by default, you can change 'tokenSlug' option to any custom slug.
 ``` js
 var ndrf = require('ndrf')
 var protocol = 'http'

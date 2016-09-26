@@ -20,7 +20,7 @@ function apiManager (protocol, domain, options) {
 
 		} catch(e) {
 			return body
-			
+
 		}
 	}
 
@@ -73,7 +73,7 @@ function djangoRestFrameworkManager (protocol, domain, options) {
 	self.options = self.apiManager.options
 
 	//slugs
-	self.tokenSlug = self.options.tokenSlug || "/api-token-auth"
+	self.tokenSlug = self.options.tokenSlug || "/api-token-auth/"
 	self.apiSlug = self.options.apiSlug || "/api"
 
 	//auth config
