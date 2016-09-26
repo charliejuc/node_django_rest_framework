@@ -48,7 +48,7 @@ request
 
 ###DJANGO REST FRAMEWORK SPECIFIC FEATURES
 ####Token User Authentication
-Send request to '/api-token-auth' slug by default, you can chage 'tokenSlug' option to any custom slug.
+Send request to '/api-token-auth' slug by default, you can change 'tokenSlug' option to any custom slug.
 ``` js
 var ndrf = require('ndrf')
 var protocol = 'http'
@@ -75,7 +75,7 @@ app.use(ndrfMiddleware)
 
 app.use((req, res, next) => {
 	ndrfMiddleware(req, res, next, {
-		host: 'ndrf.com', //By default use 'host' or 'origin' header.	
+		host: 'ndrf.com' //By default use 'host' or 'origin' header.	
 	})
 })
 ```
