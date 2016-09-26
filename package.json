@@ -1,8 +1,8 @@
 {
   "name": "ndrf",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Query your django rest framework api easily, many tools to join your node app with a django rest framework api fast and simple.",
-  "main": "node_django_rest_framework.js",
+  "main": "index.js",
   "scripts": {
     "test": "tape test/*-test.js | tap-spec",
     "coverage": "istanbul cover tape -- test/*-test.js"
@@ -24,7 +24,6 @@
   "author": "charliejuc",
   "license": "MIT",
   "dependencies": {
-    "node-cache": "^4.0.0"
   },
   "devDependencies": {
     "async": "^2.0.1",
