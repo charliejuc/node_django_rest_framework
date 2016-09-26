@@ -67,8 +67,8 @@ function djangoRestFrameworkManager (protocol, domain, options) {
 	self.options = self.apiManager.options
 
 	//slugs
-	self.getTokenSlug = self.options.getTokenSlug || "/api-token-auth"
-	self.apiSlug = self.options.getTokenSlug || "/api"
+	self.tokenSlug = self.options.tokenSlug || "/api-token-auth"
+	self.apiSlug = self.options.apiSlug || "/api"
 
 	//auth config
 	self.auth = {}
@@ -87,7 +87,7 @@ function djangoRestFrameworkManager (protocol, domain, options) {
 	}
 
 	self.auth.tokenUser = function (user_data, callback) {
-		self.apiManager.request.post(self.getTokenSlug, user_data, callback)
+		self.apiManager.request.post(self.tokenSlug, user_data, callback)
 	}
 
 	self.auth.sessionUser = function (user_data, callback) {
@@ -96,7 +96,9 @@ function djangoRestFrameworkManager (protocol, domain, options) {
 
 
 	self.getFullApiSlug = function (slug) {
-		return self.apiSlug + slug
+		var fullApiSlug = self.apiSlug + slug
+
+		return fullApiSlug.replace(/\/+/g, '/')
 	}
 
 	self.request = {
@@ -128,7 +130,7 @@ function djangoRestFrameworkManager (protocol, domain, options) {
 function djangoRestFrameworkApiMiddleware(req, res, next, options) {
 	options = options || {}
 	var protocol = req.secure && 'https' || 'http'
-	var domain = options.host || req.get('origin') || req.get('host')
+	var domain = options.host || req.get('host') || req.get('origin')
 
 	req.djrfApi = djangoRestFrameworkManager(protocol, domain, options)
 
