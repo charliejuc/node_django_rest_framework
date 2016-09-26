@@ -86,8 +86,8 @@ function djangoRestFrameworkManager (protocol, domain, options) {
 		}
 	}
 
-	self.auth.tokenUser = function (user_data, callback) {
-		self.apiManager.request.post(self.tokenSlug, user_data, callback)
+	self.auth.tokenUser = function (user_data, callback, json) {
+		self.apiManager.request.post(self.tokenSlug, user_data, callback, json)
 	}
 
 	self.auth.sessionUser = function (user_data, callback) {
