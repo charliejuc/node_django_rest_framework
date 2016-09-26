@@ -15,7 +15,13 @@ function apiManager (protocol, domain, options) {
 	self.url = util.format('%s://%s:%s', self.protocol, self.domain, self.PORT)
 
 	self.jsonParse = function (body) {
-		return JSON.parse(body)
+		try {
+			return JSON.parse(body)
+
+		} catch(e) {
+			return body
+			
+		}
 	}
 
 	self.jsonResponse = function (err, res, body, callback) {
