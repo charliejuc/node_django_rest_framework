@@ -35,26 +35,30 @@ function apiManager (protocol, domain, options) {
 	}
 
 	self.request = {
-		get: function (slug, callback, json) {
-			self.request.base('get', slug, callback, undefined, json)
+		get: function (slug, callback, options) {
+			self.request.base('get', slug, callback, undefined, options)
 		},
-		post: function (slug, data, callback, json) {
-			self.request.base('post', slug, callback, data, json)
+		post: function (slug, data, callback, options) {
+			self.request.base('post', slug, callback, data, options)
 		},
-		put: function (slug, data, callback, json) {
-			self.request.base('put', slug, callback, data, json)
+		put: function (slug, data, callback, options) {
+			self.request.base('put', slug, callback, data, options)
 		},
-		patch: function (slug, data, callback, json) {
-			self.request.base('patch', slug, callback, data, json)
+		patch: function (slug, data, callback, options) {
+			self.request.base('patch', slug, callback, data, options)
 		},
-		delete: function (slug, data, callback, json) {
-			self.request.base('delete', slug, callback, data, json)
+		delete: function (slug, data, callback, options) {
+			self.request.base('delete', slug, callback, data, options)
 		},
-		base: function (method, slug, callback, data, json) {
-			json = json || true
-			var url = self.getFullUrl(slug)
+		base: function (method, slug, callback, data, options) {
+			options = options || {} 
+			var json = options.json || true
+			delete options.json
 
-			request[method]({ url: url, form: data }, function (err, res, body) {
+			options.url = self.getFullUrl(slug)
+			options.form = data
+
+			request[method](options, function (err, res, body) {
 			  if (err || ! json || ! body) return callback(err, res, body)
 
 			  self.jsonResponse(err, res, body, callback)
@@ -92,8 +96,8 @@ function djangoRestFrameworkManager (protocol, domain, options) {
 		}
 	}
 
-	self.auth.tokenUser = function (user_data, callback, json) {
-		self.apiManager.request.post(self.tokenSlug, user_data, callback, json)
+	self.auth.tokenUser = function (user_data, callback, options) {
+		self.apiManager.request.post(self.tokenSlug, user_data, callback, options)
 	}
 
 	self.auth.sessionUser = function (user_data, callback) {
@@ -108,25 +112,55 @@ function djangoRestFrameworkManager (protocol, domain, options) {
 	}
 
 	self.request = {
-		get: function (apiSlug, callback, json) {
-			self.request.base('get', apiSlug, callback, undefined, json)
+		get: function (apiSlug, callback, options) {
+			self.request.base('get', apiSlug, callback, undefined, options)
 		},
-		post: function (apiSlug, data, callback, json) {
-			self.request.base('post', apiSlug, callback, data, json)
+		post: function (apiSlug, data, callback, options) {
+			self.request.base('post', apiSlug, callback, data, options)
 		},
-		put: function (apiSlug, data, callback, json) {
-			self.request.base('put', apiSlug, callback, data, json)
+		put: function (apiSlug, data, callback, options) {
+			self.request.base('put', apiSlug, callback, data, options)
 		},
-		patch: function (apiSlug, data, callback, json) {
-			self.request.base('patch', apiSlug, callback, data, json)
+		patch: function (apiSlug, data, callback, options) {
+			self.request.base('patch', apiSlug, callback, data, options)
 		},
-		delete: function (apiSlug, data, callback, json) {
-			self.request.base('delete', apiSlug, callback, data, json)
+		delete: function (apiSlug, data, callback, options) {
+			self.request.base('delete', apiSlug, callback, data, options)
 		},
-		base: function (method, apiSlug, callback, data, json) {
+		base: function (method, apiSlug, callback, data, options) {
 			var fullApiSlug = self.getFullApiSlug(apiSlug)
 
-			self.apiManager.request.base(method, fullApiSlug, callback, data, json)
+			self.apiManager.request.base(method, fullApiSlug, callback, data, options)
+		}
+	}
+
+	self.tokenRequest = function (userToken) {
+		if ( ! userToken ) throw new Error('User Token is required.')
+
+		return {
+			userToken: userToken,
+			get: function (slug, callback, options) {
+				this.base('get', slug, callback, undefined, options)
+			},
+			post: function (slug, data, callback, options) {
+				this.base('post', slug, callback, data, options)
+			},
+			put: function (slug, data, callback, options) {
+				this.base('put', slug, callback, data, options)
+			},
+			patch: function (slug, data, callback, options) {
+				this.base('patch', slug, callback, data, options)
+			},
+			delete: function (slug, data, callback, options) {
+				this.base('delete', slug, callback, data, options)
+			},
+			base: function (method, slug, callback, data, options) {
+				options = options || {} 
+				options.headers = options.headers || {}
+				options.headers['Authorization'] = `Token ${this.userToken}`
+				
+				self.request.base(method, slug, callback, data, options)
+			}
 		}
 	}
 

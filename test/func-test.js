@@ -31,8 +31,8 @@ var authUserAsserts = (t, tokenObj, end) => (err, res, obj) => {
 	successApiResponseAsserts(t, 200, 'POST')(err, res, obj)
 
 	t.ok(obj, 'Should be.')
-	t.ok(obj['token'], 'Should have a token.')
-	t.equals(tokenObj['token'], obj['token'], 'Got token should be equal to sent token.')
+	t.ok(obj && obj['token'], 'Should have a token.')
+	t.equals(tokenObj['token'], obj && obj['token'], 'Got token should be equal to sent token.')
 
 	if (end) t.end()
 }
@@ -87,6 +87,30 @@ test('Should be create api object properly', function (t) {
 
 	t.ok(api.request.patch, 'api.request.patch should be')
 	t.equals(typeof api.request.patch, 'function', 'api.request.patch should be a function')
+
+	t.ok(api.tokenRequest, 'Should be.')
+	t.equals(typeof api.tokenRequest, 'function', 'Should be a function.')
+
+	var token = 'sdfasdf23343'
+	var tokenRequest = api.tokenRequest(token)
+
+	t.ok(tokenRequest.userToken, 'tokenRequest.userToken should be')
+	t.equals(tokenRequest.userToken, token, 'tokenRequest.userToken should be a function')
+
+	t.ok(tokenRequest.get, 'tokenRequest.get should be')
+	t.equals(typeof tokenRequest.get, 'function', 'tokenRequest.get should be a function')
+
+	t.ok(tokenRequest.post, 'tokenRequest.post should be')
+	t.equals(typeof tokenRequest.post, 'function', 'tokenRequest.post should be a function')
+
+	t.ok(tokenRequest.delete, 'tokenRequest.delete should be')
+	t.equals(typeof tokenRequest.delete, 'function', 'tokenRequest.delete should be a function')
+
+	t.ok(tokenRequest.put, 'tokenRequest.put should be')
+	t.equals(typeof tokenRequest.put, 'function', 'tokenRequest.put should be a function')
+
+	t.ok(tokenRequest.patch, 'tokenRequest.patch should be')
+	t.equals(typeof tokenRequest.patch, 'function', 'tokenRequest.patch should be a function')
 
 	t.end()
 })
@@ -209,7 +233,7 @@ test('Should be work properly CRUD', function (t) {
 		patchReq,
 		deleteReq
 	], (err) => {
-		t.error(err, 'Should not be an final error.')
+		t.error(err, 'Should not be a final error.')
 
 		baseCrud()
 	})
@@ -245,7 +269,7 @@ test('Should be work properly CRUD', function (t) {
 			patchReqBase,
 			deleteReqBase
 		], (err) => {
-			t.error(err, 'Should not be an final error.')
+			t.error(err, 'Should not be a final error.')
 
 			t.end()
 		})
@@ -257,7 +281,7 @@ test('Should be get authentication token', function (t) {
 	var nock = Nock(endpoint)
 
 	nock
-		.post('/api-token-auth')
+		.post('/api-token-auth/')
 		.reply(200, tokenObj)
 
 	var api = ndrf.api(protocol, domain)
@@ -270,7 +294,7 @@ test('Should be create middleware', function (t) {
 	var nock = Nock(endpoint)
 
 	nock
-		.post('/api-token-auth')
+		.post('/api-token-auth/')
 		.reply(200, tokenObj)
 
 	var api = ndrf.api(protocol, domain)
@@ -308,16 +332,107 @@ test('Should throw exception', function (t) {
 	var api = ndrf.api(protocol, domain)
 
 	try {
+		api.tokenRequest()
+	} catch (e) {
+		t.ok(e, 'Should be an error when domain is undefined.')
+	}
+
+	try {
 		api = ndrf.api(undefined, domain)
 	} catch (e) {
-		t.ok(e, 'Should be an error when protocol is undefined')
+		t.ok(e, 'Should be an error when protocol is undefined.')
 	}
 
 	try {
 		api = ndrf.api(protocol, undefined)
 	} catch (e) {
-		t.ok(e, 'Should be an error when domain is undefined')
+		t.ok(e, 'Should be an error when domain is undefined.')
 	}
 
 	t.end()
+})
+
+test('Should be make token requests', function (t) { 
+	var api = ndrf.api(protocol, domain)
+	var token = 'dfasdf223SDFASadf2'
+	var req = api.tokenRequest(token)
+	var slug = '/proof'
+	var fullSlug = util.format('/api%s', slug)
+
+	var nock = Nock(endpoint)
+
+	var obj = { success: true }
+
+	nock
+		.get(fullSlug)
+		.reply(200, obj)
+
+	nock
+		.post(fullSlug)
+		.reply(201)
+
+	nock
+		.put(fullSlug)
+		.reply(200, obj)
+
+	nock
+		.patch(fullSlug)
+		.reply(204)
+
+	nock
+		.delete(fullSlug)
+		.reply(204)
+
+	function getReq (cb) { 
+		req
+			.get(slug, (err, res, body) => { 
+				successApiResponseAsserts(t, 200, 'GET')(err, res, body)
+				cb()
+			})
+	}
+
+	function postReq (cb) { 
+		req
+			.post(slug, { create: 'this thing' }, (err, res, body) => { 
+				successApiResponseAsserts(t, 201, 'POST', false)(err, res, body)
+				cb()
+			})
+	}
+
+	function putReq (cb) { 
+		req
+			.put(slug, { put: 'this thing' }, (err, res, body) => { 
+				successApiResponseAsserts(t, 200, 'PUT')(err, res, body)
+				cb()
+			})
+	}
+
+	function patchReq (cb) { 
+		req
+			.patch(slug, { patch: 'this thing' }, (err, res, body) => { 
+				successApiResponseAsserts(t, 204, 'PATCH', false)(err, res, body)
+				cb()
+			})
+	}
+
+	function deleteReq (cb) { 
+		req
+			.delete(slug, { delete: 'this thing' }, (err, res, body) => { 
+				successApiResponseAsserts(t, 204, 'DELETE', false)(err, res, body)
+				cb()
+			})
+	}
+
+	async.series([
+		getReq,
+		postReq,
+		putReq,
+		patchReq,
+		deleteReq
+	], (err) => {
+		t.error(err, 'Should not be a final error.')
+
+		t.end()
+	})
+	
 })
