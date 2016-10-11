@@ -24,11 +24,11 @@ Whether you don't want to use this feature, set 'apiSlug' to '/' or any slug und
 ####GET Request (slug:String, callback:Function, json:Boolean[Default: true])
 ``` js
 var request = api.request
-var statusCodeExpected = 200
+var expectedStatusCode = 200
 
 request
 	.get('/foo/url', (err, res, jsonBody) => {
-		if (err || res.statusCode !== statusCodeExpected) throw new Error('Something went wrong.')
+		if (err || res.statusCode !== expectedStatusCode) throw new Error('Something went wrong.')
 		
 		//Do something with body parsed in json.
 	})
@@ -40,7 +40,24 @@ var userData = {username: 'foo', password: 'fooito5632'}
 
 request
 	.post('/user/login', userData, (err, res, jsonBody) => {
-		if (err || res.statusCode !== statusCodeExpected) throw new Error('Something went wrong.')
+		if (err || res.statusCode !== expectedStatusCode) throw new Error('Something went wrong.')
+		
+		//Do something with body parsed in json.
+	})
+```
+
+###Token Request object
+It works equal to request object, simply append the Authorization Header your token.
+
+####Token Request (token[String])
+``` js
+var authorizationToken = '200444c77cf8u7f953c921cf7278a17459204y20'
+var request = api.tokenRequest(authorizationToken)
+var expectedStatusCode = 200
+
+request
+	.get('/foo/url', (err, res, jsonBody) => {
+		if (err || res.statusCode !== expectedStatusCode) throw new Error('Something went wrong.')
 		
 		//Do something with body parsed in json.
 	})
@@ -59,7 +76,7 @@ var api = ndrf.api(protocol, domain)
 var userData = {username: 'foo', password: 'fooito5632'}
 
 api.auth.user(userData, (err, res, jsonBody) => {
-	if (err || res.statusCode !== statusCodeExpected) throw new Error('Something went wrong.')
+	if (err || res.statusCode !== expectedStatusCode) throw new Error('Something went wrong.')
 	
 	//Do something with body parsed in json.
 })
