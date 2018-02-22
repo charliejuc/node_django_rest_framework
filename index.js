@@ -56,7 +56,8 @@ function apiManager (protocol, domain, options) {
 			delete options.json
 
 			options.url = self.getFullUrl(slug)
-			options.form = data
+			options.body = data
+			options.json = options.json != undefined ? options.json : true
 
 			request[method](options, function (err, res, body) {
 			  if (err || ! json || ! body) return callback(err, res, body)
@@ -137,31 +138,33 @@ function djangoRestFrameworkManager (protocol, domain, options) {
 	self.tokenRequest = function (userToken) {
 		if ( ! userToken ) throw new Error('User Token is required.')
 
-		return {
+		var tokenRequest = {
 			userToken: userToken,
 			get: function (slug, callback, options) {
-				this.base('get', slug, callback, undefined, options)
+				tokenRequest.base('get', slug, callback, undefined, options)
 			},
 			post: function (slug, data, callback, options) {
-				this.base('post', slug, callback, data, options)
+				tokenRequest.base('post', slug, callback, data, options)
 			},
 			put: function (slug, data, callback, options) {
-				this.base('put', slug, callback, data, options)
+				tokenRequest.base('put', slug, callback, data, options)
 			},
 			patch: function (slug, data, callback, options) {
-				this.base('patch', slug, callback, data, options)
+				tokenRequest.base('patch', slug, callback, data, options)
 			},
 			delete: function (slug, data, callback, options) {
-				this.base('delete', slug, callback, data, options)
+				tokenRequest.base('delete', slug, callback, data, options)
 			},
 			base: function (method, slug, callback, data, options) {
-				options = options || {} 
+				options = options || {}
 				options.headers = options.headers || {}
-				options.headers['Authorization'] = `Token ${this.userToken}`
+				options.headers['Authorization'] = `Token ${tokenRequest.userToken}`
 				
 				self.request.base(method, slug, callback, data, options)
 			}
 		}
+
+		return tokenRequest
 	}
 
 	return self
