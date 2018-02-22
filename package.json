@@ -1,6 +1,6 @@
 {
   "name": "ndrf",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Query your django rest framework api easily, many tools to join your node app with a django rest framework api fast and simple.",
   "main": "index.js",
   "scripts": {
