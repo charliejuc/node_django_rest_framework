@@ -52,15 +52,15 @@ function apiManager (protocol, domain, options) {
 		},
 		base: function (method, slug, callback, data, options) {
 			options = options || {} 
-			var json = options.json || true
-			delete options.json
 
 			options.url = self.getFullUrl(slug)
-			options.body = data
 			options.json = options.json != undefined ? options.json : true
 
+			if ( data )
+				options.body = data
+
 			request[method](options, function (err, res, body) {
-			  if (err || ! json || ! body) return callback(err, res, body)
+			  if (err || ! options.json || ! body) return callback(err, res, body)
 
 			  self.jsonResponse(err, res, body, callback)
 			})
